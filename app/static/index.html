@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DungeonHub</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="home">
+    <h1 class="brand">DungeonHub<small>Текстовые ролевые игры с нейросетью-мастером</small></h1>
+
+    <section class="card">
+      <h2>Новая кампания</h2>
+      <p class="muted">Создайте комнату, настройте мир и раздайте ссылку друзьям.</p>
+      <form id="create">
+        <label for="name">Название</label>
+        <input type="text" id="name" maxlength="80" placeholder="Например: Пятый курс Хогвартса">
+        <div id="pw-wrap" hidden>
+          <label for="pw">Пароль для создания комнат <span class="hint">(задан на сервере)</span></label>
+          <input type="password" id="pw" autocomplete="current-password">
+        </div>
+        <div style="margin-top:16px"><button class="btn primary" type="submit">Создать комнату</button></div>
+        <div class="error" id="err"></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Мои комнаты</h2>
+      <ul class="room-list" id="rooms"></ul>
+      <p class="muted" id="no-rooms">Пока пусто. Комнаты, в которые вы заходили с этого устройства, появятся здесь.</p>
+    </section>
+
+    <section class="card">
+      <h2>Войти по ссылке</h2>
+      <form id="join" class="row">
+        <div><input type="text" id="link" placeholder="Вставьте ссылку на комнату"></div>
+        <button class="btn" type="submit">Войти</button>
+      </form>
+    </section>
+  </main>
+  <script src="/static/common.js"></script>
+  <script src="/static/index.js"></script>
+</body>
+</html>

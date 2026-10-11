@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <title>Комната — DungeonHub</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="room">
+  <header class="topbar">
+    <button class="btn ghost menu-btn" id="menu-btn" title="Игроки">☰</button>
+    <a class="home-link" href="/" title="На главную">⌂</a>
+    <div class="title" id="room-title">…</div>
+    <span class="conn" id="conn">подключение…</span>
+    <button class="btn ghost" id="help-btn" title="Как играть">?</button>
+    <button class="btn" id="settings-btn" hidden>⚙ Настройки</button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <h3>За столом</h3>
+      <div id="players"></div>
+      <div class="side-actions">
+        <button class="btn" id="sheet-btn">📜 Мой персонаж</button>
+        <button class="btn" id="invite-btn">🔗 Пригласить</button>
+      </div>
+    </aside>
+
+    <section class="chat">
+      <div class="feed" id="feed">
+        <div class="feed-inner" id="messages"></div>
+        <div class="feed-inner"><div class="typing" id="typing">Мастер пишет<span>.</span><span>.</span><span>.</span></div></div>
+      </div>
+      <div class="composer">
+        <div class="composer-inner">
+          <div class="composer-row">
+            <button class="btn" id="dice-btn" title="Бросок кубиков">🎲</button>
+            <textarea id="input" rows="1" placeholder="Что делает ваш персонаж?"></textarea>
+            <button class="btn primary" id="send-btn">Отправить</button>
+          </div>
+          <div class="meta">
+            <span><span class="open-flag" id="open-flag">✎ Заявка открыта — напишите «конец заявки», когда закончите. </span><span class="keys">Enter — отправить · Shift+Enter — новая строка · /help — команды</span></span>
+            <button class="btn ghost" id="turn-btn" style="padding:2px 10px;font-size:12px">⏭ Ход мастера</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- вход -->
+<dialog id="join-dlg">
+  <form method="dialog" id="join-form">
+    <div class="dlg-body">
+      <h2>Вход в комнату</h2>
+      <p class="muted" id="join-room-name"></p>
+      <label for="j-player">Ваше имя</label>
+      <input type="text" id="j-player" maxlength="40" required placeholder="Петя">
+      <label for="j-char">Имя персонажа</label>
+      <input type="text" id="j-char" maxlength="60" required placeholder="Невилл Долгопупс">
+      <div class="error" id="join-err"></div>
+    </div>
+    <div class="dlg-foot"><button class="btn primary" type="submit">Войти</button></div>
+  </form>
+</dialog>
+
+<!-- персонаж -->
+<dialog id="sheet-dlg">
+  <form method="dialog" id="sheet-form">
+    <div class="dlg-body">
+      <h2>Мой персонаж</h2>
+      <label for="s-char">Имя персонажа</label>
+      <input type="text" id="s-char" maxlength="60">
+      <label for="s-sheet">Описание и лист персонажа <span class="hint">— мастер учитывает это в каждом ответе</span></label>
+      <textarea id="s-sheet" rows="12" maxlength="4000" placeholder="Факультет, курс, внешность, характер, сильные и слабые стороны, любимые заклинания, характеристики (если играете с механикой)…"></textarea>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn ghost" value="cancel" formnovalidate>Отмена</button>
+      <button class="btn primary" value="save">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- просмотр чужого персонажа -->
+<dialog id="view-dlg">
+  <form method="dialog">
+    <div class="dlg-body">
+      <h2 id="v-char"></h2>
+      <p class="muted" id="v-player"></p>
+      <div class="sheet-view" id="v-sheet"></div>
+    </div>
+    <div class="dlg-foot"><button class="btn">Закрыть</button></div>
+  </form>
+</dialog>
+
+<!-- приглашение -->
+<dialog id="invite-dlg">
+  <form method="dialog">
+    <div class="dlg-body">
+      <h2>Пригласить</h2>
+      <label>Ссылка для игроков</label>
+      <div class="copy-row"><input type="text" id="invite-link" readonly><button class="btn" type="button" data-copy="invite-link">Копировать</button></div>
+      <div id="admin-link-wrap" hidden>
+        <label>Ссылка мастера <span class="hint">— даёт доступ к настройкам. Не раздавайте игрокам; нужна, чтобы открыть настройки с другого устройства.</span></label>
+        <div class="copy-row"><input type="text" id="admin-link" readonly><button class="btn" type="button" data-copy="admin-link">Копировать</button></div>
+      </div>
+    </div>
+    <div class="dlg-foot"><button class="btn">Готово</button></div>
+  </form>
+</dialog>
+
+<!-- настройки мастера -->
+<dialog id="settings-dlg" class="wide">
+  <form method="dialog" id="settings-form">
+    <div class="dlg-body">
+      <h2>Настройки мастера</h2>
+      <p class="muted">Эти поля видит только нейросеть и вы. Игроки их не видят.</p>
+
+      <label for="st-name">Название кампании</label>
+      <input type="text" id="st-name" maxlength="80">
+
+      <p class="section-title">Мир и сюжет</p>
+      <label for="st-world">Мир <span class="hint">— сеттинг, эпоха, правила магии, важные места и фракции</span></label>
+      <textarea id="st-world" rows="6" placeholder="Британия, 1995 год. Хогвартс…"></textarea>
+      <label for="st-situation">Стартовая ситуация <span class="hint">— где и почему герои оказались вместе</span></label>
+      <textarea id="st-situation" rows="4"></textarea>
+      <label for="st-plot">Секретные заметки о сюжете <span class="hint">— тайны, злодеи, повороты, куда вести историю</span></label>
+      <textarea id="st-plot" rows="5"></textarea>
+      <label for="st-style">Стиль и тон <span class="hint">— жанр, атмосфера, чего избегать</span></label>
+      <textarea id="st-style" rows="3" placeholder="Мрачноватое приключение с юмором, без жестоких сцен…"></textarea>
+
+      <p class="section-title">Как ведёт мастер</p>
+      <div class="grid2">
+        <div>
+          <label for="st-length">Длина ответов</label>
+          <select id="st-length">
+            <option value="short">Коротко (1–2 абзаца)</option>
+            <option value="medium">Средне (2–4 абзаца)</option>
+            <option value="long">Подробно (4–7 абзацев)</option>
+          </select>
+        </div>
+        <div>
+          <label for="st-mode">Режим</label>
+          <select id="st-mode">
+            <option value="narrative">Повествовательный, без кубиков</option>
+            <option value="mechanics">С механикой и бросками</option>
+          </select>
+        </div>
+      </div>
+      <div id="rules-wrap">
+        <label for="st-rules">Правила механики <span class="hint">— как работают проверки</span></label>
+        <textarea id="st-rules" rows="4" placeholder="Проверка: 1d20 + модификатор характеристики. Сложность: 10 — легко, 15 — средне, 20 — трудно. 20 на кубике — критический успех, 1 — провал с осложнением."></textarea>
+      </div>
+
+      <p class="section-title">Ритм игры</p>
+      <div class="grid3">
+        <div>
+          <label for="st-batch">Пауза перед ответом, сек <span class="hint">— собрать заявки</span></label>
+          <input type="number" id="st-batch" min="0" max="60" step="1">
+        </div>
+        <div>
+          <label for="st-timeout">Таймаут заявки, мин</label>
+          <input type="number" id="st-timeout" min="1" max="120" step="1">
+        </div>
+        <div>
+          <label for="st-temp">Креативность <span class="hint">(0–2)</span></label>
+          <input type="number" id="st-temp" min="0" max="2" step="0.1">
+        </div>
+      </div>
+      <label for="st-model">Модель <span class="hint" id="model-hint"></span></label>
+      <input type="text" id="st-model" maxlength="80" placeholder="по умолчанию">
+
+      <p class="section-title">Летопись</p>
+      <label for="st-chronicle">Краткое содержание прошлых событий <span class="hint">— обновляется автоматически, можно править вручную</span></label>
+      <textarea id="st-chronicle" rows="6"></textarea>
+      <div class="error" id="settings-err"></div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn ghost" value="cancel" formnovalidate>Отмена</button>
+      <button class="btn primary" value="save">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/static/common.js"></script>
+<script src="/static/room.js"></script>
+</body>
+</html>

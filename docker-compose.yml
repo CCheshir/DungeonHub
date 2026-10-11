@@ -1,0 +1,10 @@
+services:
+  dungeonhub:
+    build: .
+    container_name: dungeonhub
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ./data:/data
