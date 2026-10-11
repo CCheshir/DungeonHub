@@ -114,6 +114,42 @@ tests/         — тесты движка
 
 Движок комнаты общается с клиентами через простой интерфейс `send(dict)`, поэтому Discord- или Telegram-бота можно добавить поверх него, не трогая логику игры.
 
+## Запуск на VM без Docker
+
+Подходит, если Docker на VPS не стартует с ошибкой `ip_unprivileged_port_start ... permission denied` (так бывает на VPS, сделанных из LXC-контейнеров).
+
+```bash
+sudo apt update && sudo apt install -y python3-venv
+cd ~/DungeonHub
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+Автозапуск через systemd (файл `.env` должен быть заполнен):
+
+```bash
+sudo tee /etc/systemd/system/dungeonhub.service > /dev/null <<EOF
+[Unit]
+Description=DungeonHub
+After=network-online.target
+
+[Service]
+User=$USER
+WorkingDirectory=$HOME/DungeonHub
+EnvironmentFile=$HOME/DungeonHub/.env
+Environment=DB_PATH=$HOME/DungeonHub/data/dungeonhub.db
+ExecStart=$HOME/DungeonHub/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now dungeonhub
+```
+
+Логи: `journalctl -u dungeonhub -f`. Обновление: `git pull && .venv/bin/pip install -r requirements.txt && sudo systemctl restart dungeonhub`.
+
 ## Локальный запуск без Docker
 
 ```bash
