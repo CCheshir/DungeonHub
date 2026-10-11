@@ -22,7 +22,7 @@ log = logging.getLogger("dungeonhub")
 STATIC = Path(__file__).parent / "static"
 DB_PATH = os.environ.get("DB_PATH", "dungeonhub.db")
 CREATE_PASSWORD = os.environ.get("CREATE_ROOM_PASSWORD", "")
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 
 
 def make_llm():
